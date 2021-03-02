@@ -1,62 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import reportWebVitals from './reportWebVitals';
+import MostrarVoltas from './MostrarVoltas';
+import MostrarTempoMedioVolta from './MostrarTempoMedioVolta';
+import Button from './Button';
+import './index.css';
+import './styles.css';
+
 
 function App(props){
 
   // Os Hooks devem ser executados sempre dentro do componente. Sem querer testei fora e estava dando o seguinte erro:
   // "React Hook "useState" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function."
-  const [numVoltas, setNumVoltas] = useState(14);
+  const [numVoltas, setNumVoltas] = useState(0);
   const [tempo, setTempo] = useState(0);
+  const [running, setRunning] = useState(false);
+  
 
-  const Button = (props) => {
-    return (
-      <button onClick={props.onClick}>{props.text}</button> // Aqui é possível pegar o evento onClick passando através das props. Naturalmente a chamada do onClick deve existir lá no elemento
-    )
-  }
-  
-  const MostrarVoltas = (props) => {
-    return <p> {props.voltas} <br/> Voltas</p>
-  }
-  
-  const MostrarTempoMedioVolta = (props) => {
-    return <p> {props.tempo} <br/> Tempo médio por volta</p>
-  }
+
+  useEffect(() => { // O useEffect 
+    let timer = null;
+    if (running){
+        timer = setInterval(() => {
+          setTempo(old => old + 1);        
+        },1000);
+    }
+    return () => {
+      if (timer)
+        clearInterval(timer);
+    }
+
+  },[running]); // Aqui, segundo a aula, passando o segundo parametro como um Array vazio "[]" faz com que o setInterval não seja executado mais de uma vez. 
+  // Passando o parâmetro running faz com que o useEffect seja executado quando o running sofre alguma alteração.
+
   
   const increment = () => {
     setNumVoltas(numVoltas + 1);
   }
   
   const decrement = () => {
-    setNumVoltas(numVoltas - 1);
+    if (numVoltas > 0)
+      setNumVoltas(numVoltas - 1);
   }
-  
-  useEffect(() => { // O useEffect 
-    setInterval(() => {
-      console.log("chamou!");
-    },1000)
-  },[]);  // Aqui, segundo a aula, passando o segundo parametro como um Array vazio "[]" faz com que o setInterval não seja executado mais de uma vez. 
-          // Mas não ficou claro o que é exatamente este parâmetro
 
+  const toggleRunning = () => {
+    setRunning(!running);
+  }
+
+  const reset = () => {
+    setTempo(0);
+    setNumVoltas(0);
+  }
   
   return (
     <div>
       <MostrarVoltas voltas={numVoltas}/>
-      <Button text='+' onClick={increment}></Button>
-      <Button text='-' onClick={decrement}></Button>
-      <MostrarTempoMedioVolta tempo={tempo}/>
-      <Button text='Iniciar'></Button>
-      <Button text='Reiniciar'></Button>
+      <Button className="bigger" text='+' onClick={increment}></Button>
+      <Button className="bigger" text='-' onClick={decrement}></Button>
+      {
+        numVoltas > 0 &&
+        <MostrarTempoMedioVolta tempo={Math.round(tempo/numVoltas)}/>
+      }
+      <Button onClick={toggleRunning} text={running ? 'Pausar' : 'Iniciar'}></Button> 
+      <Button onClick={reset} text='Reiniciar'></Button>      
     </div>
   )
 }
-
-
-
-
-
-
 
 ReactDOM.render(
   <App/>,document.getElementById('root')
